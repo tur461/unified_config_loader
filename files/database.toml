@@ -1,0 +1,3 @@
+# Production database configuration
+url = "postgres://user:pass@localhost/db" # the primary connection
+pool_size = 10                            # override default of 5

@@ -1,0 +1,2 @@
+host: "api.example.com"
+# timeout is missing, so default_fn is used

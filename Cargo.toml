@@ -1,0 +1,23 @@
+[workspace]
+members = ["config_derive_pm"]
+
+[package]
+name = "unified_config_loader"
+version = "0.1.0"
+edition = "2024"
+authors = ["tur461"]
+description = "A strongly-typed, multi-source configuration loader with clear precedence and validation"
+
+[features]
+default = []
+toml = ["dep:toml"]
+yaml = ["dep:serde_yaml"]
+hot-reload = ["dep:notify"]
+
+[dependencies]
+anyhow = "1.0.102"
+config_derive_pm = { path = "config_derive_pm" }
+notify = { version = "8.2.0", optional = true }
+thiserror = "2.0.18"
+toml = { version = "1.1.2", optional = true }
+serde_yaml = { version = "0.9.34", optional = true }
