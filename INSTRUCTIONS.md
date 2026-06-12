@@ -175,14 +175,15 @@ Run them with:
 
 ```bash
 cargo run --example basic
-cargo run --example hot_reload_conventional
-cargo run --example hot_reload_single_file
-cargo run --example precedence
+cargo run --example ini_basic --features=ini
+cargo run --example toml_basic --features=toml
+cargo run --example hot_reload_conventional --features=hot-reload,toml
+cargo run --example hot_reload_single_file --features=hot-reload,toml
 ```
 
 ### Example: Creating a Config File
 
-Before running `hot_reload_conventional`, create a config file:
+Before running `hot_reload_conventional`, create a config file (well we have some files already created in files/):
 
 ```bash
 echo 'host = "example.com"' > config.toml
@@ -194,6 +195,7 @@ echo 'host = "example.com"' > config.toml
 
 - Make sure your config file is in the crate root (the same directory as `Cargo.toml`).
 - Check that your environment variable prefix is correct.
+- Check examples from examples/ folder for reference.
 - If a required field is missing, the error message will tell you which one.
 - If you see strange macro-related errors, try:
 
