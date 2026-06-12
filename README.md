@@ -1,81 +1,87 @@
 # Unified Configuration Loader
 
-## Summary
+A simple but powerful configuration loader for Rust applications.
 
-You have been tasked with building a **robust, strongly-typed configuration
-loader** for a Rust application.
+It loads settings from defaults, configuration files, and environment variables, then merges them together so your application always gets the final value it should use.
 
-Real-world applications often need to load configuration values from multiple
-sources. Your goal is to design a clean and predictable configuration system
-that merges values from different sources while providing clear error handling
-and validation.
+## Features
 
-## Configuration Sources
+- Define your configuration using a normal Rust struct.
+- Add a few `#[config(...)]` attributes.
+- Automatically get a `load()` method for your config type.
+- Load configuration from:
+  - Defaults defined in code
+  - Configuration files (`.env`, `config.toml`, `config.json`, `config.yaml`, `config.ini`, etc.)
+  - Environment variables with a configurable prefix
 
-Configuration values may come from the following sources:
+- Clear error messages when required values are missing.
+- Optional hot reload support that automatically updates configuration when files change.
 
-* Default values defined in code
-* Environment variables
-* A configuration file
+---
 
-## Requirements
+## Example
 
-### Core Functionality
+```rust
+use unified_config_loader::ConfigLoader;
 
-* Provide a unified API for loading configuration:
-  ```rust
-  let config = Config::load()?;
-  ```
-* Configuration must be strongly typed
-* Define clear and deterministic precedence rules between configuration sources
-* Provide meaningful and actionable error messages
+#[derive(ConfigLoader, Debug)]
+#[config(env_prefix = "MYAPP_")]
+struct MyConfig {
+    #[config(default = "hello")]
+    message: String,
 
-## Constraints
+    #[config(required)]
+    api_key: String,
+}
 
-* No use of unwrap() or expect()
-* Errors must be propagated using Result
-* Avoid global mutable state
-* The configuration loader must be easy to test without relying on external system state
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cfg = MyConfig::load()?;
 
-## Validation
+    println!("Loaded: {:?}", cfg);
 
-* Configuration values should be validated where appropriate
-* Invalid or missing required configuration should result in a clear error
-* Partial configuration should not silently fall back to invalid defaults
+    Ok(())
+}
+```
 
-## Additional Requirements
+---
 
-* Your source should contain unit tests for configuration loading and validation
-* All code must be formatted using the standard formatting tool
-* Code must compile without clippy errors
-* The solution must use safe Rust only
+## Documentation
 
-## Design & Reasoning (Required)
+- [Instructions for Installation, Usage, Testing, and Examples](INSTRUCTIONS.md)
+- [Design Decisions and Trade-offs](DESIGN.md)
+- [License](LICENSE)
 
-* Along with the code, include a document (for example DESIGN.md) explaining:
-* How configuration sources are loaded and merged
-* Precedence rules between defaults, environment variables, and files
-* Error modeling and reporting strategy
-* How the configuration is validated
-* Trade-offs made in the design
+---
 
-Submissions without a design explanation will not be reviewed.
+## Configuration Precedence
 
-## Submission
+Configuration values are merged using the following priority order:
 
-Please fork this repository to your own GitHub account and submit a pull request
-to your own repository.
+| Priority | Source                |
+| -------- | --------------------- |
+| Highest  | Environment Variables |
+| Medium   | Configuration Files   |
+| Lowest   | Defaults in Code      |
 
-Your pull request should include:
-* A clear description of your approach
-* Any assumptions or trade-offs made
-* Instructions on how to run tests
+This means environment variables always override file values, and file values always override defaults.
 
-A link to the pull request can be submitted once it is ready for review.
+---
 
-## Bonus
+## Hot Reload
 
-* Support for multiple configuration file formats (e.g. TOML, YAML)
-* Hot-reload support for configuration changes
-* Partial configuration validation
-* Schema or documentation generation
+If you want configuration updates without restarting your application, use:
+
+```rust
+use unified_config_loader::hot_reload::ReloadableConfig;
+
+let handle = ReloadableConfig::<MyConfig>::load()?;
+let config = handle.get();
+```
+
+The loader watches configuration files in the background and automatically reloads them when they change.
+
+---
+
+## License
+
+Licensed under the MIT License. See the `LICENSE` file for details.
