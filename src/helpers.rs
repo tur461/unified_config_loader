@@ -8,7 +8,7 @@ pub fn resolve_value_with_fn<T: FromStr + Default>(
     required: bool,
     default_literal: Option<&str>,
     default_fn: Option<fn() -> Result<T, ConfigError>>,
-    file_kvs: &Option<HashMap<String, String>>,
+    file_kvs: &HashMap<String, (String, ValueSource)>,
 ) -> Result<T, ConfigError> {
     let mut value: Option<T> = None;
 
@@ -23,13 +23,11 @@ pub fn resolve_value_with_fn<T: FromStr + Default>(
     }
 
     // Source: File
-    if let Some(kvs) = file_kvs
-        && let Some(raw) = kvs.get(field)
-    {
-        let parsed = raw.parse::<T>().map_err(|_| ConfigError::InvalidValue {
+    if let Some(raw) = file_kvs.get(field) {
+        let parsed = raw.0.parse::<T>().map_err(|_| ConfigError::InvalidValue {
             field: field.to_string(),
-            value: raw.clone(),
-            value_source: ValueSource::File,
+            value: raw.0.clone(),
+            value_source: raw.1,
         })?;
         value = Some(parsed);
     }

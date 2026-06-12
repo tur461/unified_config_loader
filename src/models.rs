@@ -1,8 +1,12 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ValueSource {
     Default,
     Environment,
-    File,
+    EnvFile,
+    TomlFile,
+    IniFile,
+    JsonFile,
+    YamlFile,
 }
 
 impl std::fmt::Display for ValueSource {
@@ -10,7 +14,11 @@ impl std::fmt::Display for ValueSource {
         match self {
             ValueSource::Default => write!(f, "default"),
             ValueSource::Environment => write!(f, "environment"),
-            ValueSource::File => write!(f, "file"),
+            ValueSource::EnvFile => write!(f, ".env file"),
+            ValueSource::TomlFile => write!(f, ".toml file"),
+            ValueSource::IniFile => write!(f, ".ini file"),
+            ValueSource::JsonFile => write!(f, ".json file"),
+            ValueSource::YamlFile => write!(f, ".yaml file"),
         }
     }
 }

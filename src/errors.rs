@@ -10,6 +10,9 @@ pub enum ConfigError {
         source: std::io::Error,
     },
 
+    #[error("invalid configuration file path")]
+    InvalidPath,
+
     #[error("parse error in configuration file at line {line}: {message}")]
     FileParse { line: usize, message: String },
 

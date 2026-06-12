@@ -1,11 +1,13 @@
 use unified_config_loader::ConfigLoader;
+use unified_config_loader::ValueSource;
 use unified_config_loader::traits::Config;
 
 #[derive(ConfigLoader, Debug)]
+#[config(env_prefix = "MYAPP_")]
 struct AppConfig {
-    #[default = "localhost"]
+    #[config(default = "localhost")]
     host: String,
-    #[default = "8080"]
+    #[config(default = "8080")]
     port: u16,
 }
 

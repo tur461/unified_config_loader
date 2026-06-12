@@ -1,18 +1,21 @@
 use unified_config_loader::ConfigLoader;
+use unified_config_loader::ValueSource;
 use unified_config_loader::traits::Config;
 
 #[derive(ConfigLoader, Debug)]
+#[config(env_prefix = "MYAPP_")]
 struct AppConfig {
-    #[default = "localhost"]
+    #[config(default = "localhost")]
     host: String,
-    #[default = "8080"]
+    #[config(default = "8080")]
     port: u16,
-    #[default = "info"]
+    #[config(default = "info")]
     log_level: String,
 }
 
 fn main() {
     unsafe {
+        // highest precedence
         std::env::set_var("PORT", "9090");
         std::env::set_var("LOG_LEVEL", "debug");
     }

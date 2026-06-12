@@ -1,12 +1,14 @@
 use unified_config_loader::ConfigLoader;
+use unified_config_loader::ValueSource;
 use unified_config_loader::errors::ConfigError;
 use unified_config_loader::traits::{Config, Validate};
 
 #[derive(ConfigLoader, Debug)]
+#[config(env_prefix = "MYAPP_")]
 struct AppConfig {
-    #[default = "8080"]
+    #[config(default = "8080")]
     port: u16,
-    #[default = "info"]
+    #[config(default = "info")]
     log_level: String,
 }
 
