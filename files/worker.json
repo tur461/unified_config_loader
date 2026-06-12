@@ -1,0 +1,5 @@
+{
+  "queue_name": "high-priority-jobs",
+  "concurrency": 4,
+  "max_retries": 1000
+}
