@@ -29,8 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let worker_handle = thread::spawn(move || {
         while running.load(Ordering::Relaxed) {
-            let cfg = config_handle.get();
-            println!("Worker: host = {}", cfg.host);
+            {
+                let cfg = config_handle.get();
+                println!("Worker: host = {}", cfg.host);
+            }
             thread::sleep(Duration::from_secs(2));
         }
         println!("Worker shutting down gracefully.");

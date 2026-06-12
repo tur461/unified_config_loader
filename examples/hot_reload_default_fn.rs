@@ -42,8 +42,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     thread::spawn(move || {
         loop {
-            let cfg = config_handle.get();
-            println!("Config: host={}, port={}", cfg.host, cfg.port);
+            {
+                let cfg = config_handle.get();
+                println!("Config: host={}, port={}", cfg.host, cfg.port);
+            }
             thread::sleep(Duration::from_secs(3));
         }
     });

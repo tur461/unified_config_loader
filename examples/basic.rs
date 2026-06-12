@@ -7,11 +7,18 @@ use unified_config_loader::traits::Config;
 struct AppConfig {
     #[config(default = "localhost")]
     host: String,
-    #[config(default = "8080")]
+    #[config(default = 8080)]
     port: u16,
+    #[config(default = true, required)]
+    enabled: bool,
 }
 
 fn main() {
     let config = AppConfig::load().unwrap();
-    println!("Server running at {}:{}", config.host, config.port);
+    println!(
+        "Server running at {}:{} enabled?: {}",
+        config.host, config.port, config.enabled
+    );
+
+    println!("Schema: {:?}", AppConfig::schema());
 }

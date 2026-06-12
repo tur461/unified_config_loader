@@ -26,18 +26,24 @@ struct AppConfig {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
-        env::set_var("APP_CONFIG_FILE", "files/my_config.toml");
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        env::set_var(
+            "APP_CONFIG_FILE",
+            format!("{manifest_dir}/files/my_config.toml"),
+        );
     }
 
     let config_handle = ReloadableConfig::<AppConfig>::load()?;
 
     thread::spawn(move || {
         loop {
-            let cfg = config_handle.get();
-            println!(
-                "API key: {}, host: {}, port: {}",
-                cfg.api_key, cfg.host, cfg.port
-            );
+            {
+                let cfg = config_handle.get();
+                println!(
+                    "API key: {}, host: {}, port: {}",
+                    cfg.api_key, cfg.host, cfg.port
+                );
+            }
             thread::sleep(Duration::from_secs(2));
         }
     });

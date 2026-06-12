@@ -6,6 +6,7 @@
     dead_code                   // some structs or functions are for illustration only
 )]
 
+use std::env;
 use std::thread;
 use std::time::Duration;
 use unified_config_loader::ConfigLoader;
@@ -22,8 +23,15 @@ struct AppConfig {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    unsafe {
+        env::set_var(
+            "APP_CONFIG_FILE",
+            format!("{manifest_dir}/files/config_fallback_hr.toml"),
+        );
+    }
     std::fs::write(
-        "files/config_fallback_hr.toml",
+        format!("{manifest_dir}/files/config_fallback_hr.toml"),
         "api_key = \"valid-key\"\nport = 8080",
     )?;
 
@@ -41,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Current config: api_key = {}, port = {}",
                 cfg.api_key, cfg.port
             );
+            drop(cfg);
             thread::sleep(Duration::from_secs(3));
         }
     });

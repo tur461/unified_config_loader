@@ -264,6 +264,8 @@ pub fn derive_config(input: TokenStream) -> TokenStream {
 
                 #(#field_initializers)*
 
+                // println!("Config Loaded.");
+
                 ::std::result::Result::Ok(#name {
                     #(#field_names),*
                 })

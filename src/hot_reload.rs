@@ -1,7 +1,7 @@
 use crate::errors::ConfigError;
 use crate::traits::Config;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::thread;
 
@@ -11,7 +11,7 @@ pub struct ReloadableConfig<C: Config + Clone> {
     _watcher_handle: Arc<thread::JoinHandle<()>>,
 }
 
-impl<C: Config + Clone + Send + 'static + Sync> ReloadableConfig<C> {
+impl<C: Config + Clone + Send + 'static + Sync + std::fmt::Debug> ReloadableConfig<C> {
     pub fn load() -> Result<Self, ConfigError> {
         let (watched_paths, is_single_file) = Self::determine_watched_paths()?;
 
@@ -43,25 +43,47 @@ impl<C: Config + Clone + Send + 'static + Sync> ReloadableConfig<C> {
 
         // Single-file mode via APP_CONFIG_FILE (same as macro's `option_env!`)
         if let Ok(custom_file) = std::env::var("APP_CONFIG_FILE") {
-            let path = manifest_dir.join(&custom_file);
+            let path = PathBuf::from(&custom_file);
             if !path.exists() {
                 eprintln!(
                     "[config-watcher] Warning: APP_CONFIG_FILE points to non-existent file: {}",
                     custom_file
                 );
             }
-            return Ok((vec![path], true));
+            let canonical_path = Self::canonicalize_path(&path);
+            println!("watching custom_file: {}", canonical_path.display());
+
+            return Ok((vec![canonical_path], true));
         }
 
-        // Conventional mode: watch the manifest directory and all conventional files
         let mut paths = Vec::new();
-        paths.push(manifest_dir.clone()); // watch the whole directory
-        paths.push(manifest_dir.join(".env"));
-        paths.push(manifest_dir.join(".env.local"));
+        let canonical_manifest = Self::canonicalize_path(&manifest_dir);
+        paths.push(canonical_manifest.clone()); // watch the whole directory
+        let mut add_file = |file_name: &str| {
+            let file_path = manifest_dir.join(file_name);
+            paths.push(Self::canonicalize_path(&file_path));
+        };
+        add_file(".env");
+        add_file(".env.local");
         for ext in &["toml", "json", "yaml", "ini"] {
-            paths.push(manifest_dir.join(format!("config.{}", ext)));
+            add_file(&format!("config.{}", ext));
         }
         Ok((paths, false))
+    }
+
+    fn canonicalize_path(path: &Path) -> PathBuf {
+        if path.exists() {
+            if let Ok(canonical) = path.canonicalize() {
+                return canonical;
+            }
+        } else if let Some(parent) = path.parent()
+            && parent.exists()
+            && let Ok(canonical_parent) = parent.canonicalize()
+            && let Some(file_name) = path.file_name()
+        {
+            return canonical_parent.join(file_name);
+        }
+        path.to_path_buf()
     }
 
     fn watcher_thread(watched_paths: Vec<PathBuf>, is_single_file: bool, inner: Arc<RwLock<C>>) {
@@ -100,18 +122,27 @@ impl<C: Config + Clone + Send + 'static + Sync> ReloadableConfig<C> {
             match event {
                 Ok(Event { kind, paths, .. }) => {
                     let should_reload = if is_single_file {
-                        // Only reload if the changed file is exactly the one we're watching
-                        paths.iter().any(|p| watched_paths.contains(p))
+                        let watched = &watched_paths[0]; // there is exactly one path
+                        paths.iter().any(|event_path| {
+                            if let Ok(canonical) = event_path.canonicalize() {
+                                canonical == *watched
+                            } else {
+                                event_path == watched
+                            }
+                        })
                     } else {
-                        // In conventional mode, reload on any modification/create in the manifest dir
                         matches!(kind, EventKind::Modify(_) | EventKind::Create(_))
                     };
+
                     if should_reload {
+                        println!("we should reload");
                         match C::load() {
                             Ok(new_config) => {
+                                println!("we got new config: {new_config:?}");
                                 if let Ok(mut guard) = inner.write() {
                                     *guard = new_config;
                                 }
+                                println!("config reloaded.");
                             }
                             Err(e) => eprintln!("[config-watcher] Reload failed: {}", e),
                         }

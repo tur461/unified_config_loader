@@ -33,6 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         loop {
             let cfg = config_handle.get();
             println!("Current value: {}", cfg.value);
+            drop(cfg);
             thread::sleep(Duration::from_secs(5));
         }
     });

@@ -26,7 +26,11 @@ struct AppConfig {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
-        env::set_var("APP_CONFIG_FILE", "files/hr_conv.toml");
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        env::set_var(
+            "APP_CONFIG_FILE",
+            format!("{manifest_dir}/files/hr_conv.toml"),
+        );
     }
     let config = ReloadableConfig::<AppConfig>::load()?;
 
